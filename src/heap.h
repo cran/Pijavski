@@ -87,9 +87,19 @@ typedef unsigned long long int ULINTH; //this type myst be 8 bytes long
 //#define ULINTH unsigned long long int ULINT //this type myst be 8 bytes long
 #endif
 
+struct datum {
+	unsigned int Idx1;
+	unsigned int Idx2;
+	float val;
+};
+
+struct datum BADDATUM = { 0xFFFFFFFF , 0xFFFFFFFF , 10e11 };
+
 
 /***  User define data type  ***/
-#define DATA_TYPE ULINTH  // was UINT 4 bytes - this is for MPI to pack the key
+//#define DATA_TYPE ULINTH  // was UINT 4 bytes - this is for MPI to pack the key
+#define DATA_TYPE datum  // GB change 10/10/2020
+
 //#define DATA_TYPE void*
 
 /***  Type for the index in binary heap.  ***/
@@ -110,7 +120,7 @@ typedef unsigned long long int ULINTH; //this type myst be 8 bytes long
 
 /*** Type for the key. User define.  **/
 #define KEY_TYPE float
-#define BADINDEX 0xFFFFFFFF
+#define BADINDEX BADDATUM
 
 /*
 *********************************************************************
@@ -136,6 +146,7 @@ typedef struct node_s
 {
   DATA_TYPE  data;
 } node_t;
+
 
 
 /*

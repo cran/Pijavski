@@ -27,8 +27,6 @@ returns the list
  Packaged for R by Gita Das, 2016 
 
 =======================================================================================*/
-
-
 #include "heap.h"
 
 #include <cstdlib>
@@ -44,11 +42,10 @@ using namespace Rcpp;
 //typedef void ( *USER_FUNCTION_P)(double *, double *);
 
 //The folowing lines are used to disable optimizations since GCC 4.4
-#pragma GCC push_options
-#pragma GCC optimize("O0")
+// #pragma GCC push_options
+// #pragma GCC optimize("O0")
 // this generates warnings for GCC ver 4.6.3
-//#pragma optimize (" ", off )
-//#pragma OPTIMIZE OFF
+
 
 
 
@@ -69,7 +66,9 @@ KEY_TYPE ftP; // global
 //the following pragma is used to avoid compiler warnings
 // "dereferencing type-punned pointer will break strict-aliasing rules" as broken in the two macros
 // f2ulint and ulint2f (both pointer int and float refering to same memory locations )
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+//#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+
+/*  GB sacrifice space over security/compatibility
 #define f2ulint(a)  (*(unsigned int*) &(a))
 #define ulint2f(a) (*(float*) &(a))
 unsigned int UL1P;
@@ -81,14 +80,21 @@ KEY_TYPE _getKey(node_t theNode)
 	// use the first 4 bytes
 	return -ftP;
 }
+*/
 
 INDEX_TYPE _getIndex(node_t theNode) {	return 0; }
 void _setIndex(node_t theNode, INDEX_TYPE I) {}
 
+KEY_TYPE _getKey(node_t theNode)
+{
+	return -(theNode.data.val);
+}
+
 
 ULINT ULP;
 unsigned int UI;
-
+DATA_TYPE DAT;
+/*
 INDEX_TYPE Merge1 (bheap_t *h, float f, unsigned short i, unsigned short j)
 {
 	f=-f;
@@ -103,9 +109,18 @@ INDEX_TYPE Merge1 (bheap_t *h, float f, unsigned short i, unsigned short j)
 	UI = ((UI  << 16) & 0xFFFF0000) | j;
 	ULP = ULP + UI;
 	return bh_insert(h, ULP);
+}*/
+INDEX_TYPE Merge1(bheap_t *h, float f, unsigned int  i, unsigned int j)
+{
+	f = -f;
+	DAT.val = f;
+	DAT.Idx1 = i;
+	DAT.Idx2 = j;
+	return bh_insert(h, DAT);
 }
 
-void GetIndices(DATA_TYPE Node, unsigned short int *i, unsigned short int *j)
+/*
+void GetIndices(DATA_TYPE Node, unsigned int *i, unsigned int *j)
 {
 #ifdef _MSC_VER
        UI = Node & 0x00000000FFFFFFFFUL ;
@@ -115,10 +130,16 @@ void GetIndices(DATA_TYPE Node, unsigned short int *i, unsigned short int *j)
 	   *j = UI & 0x0000FFFF;
 	   *i = (UI >> 16) & 0x0000FFFF;
 }
+*/
+void GetIndices(DATA_TYPE Node, unsigned int *i, unsigned int *j)
+{
+	*i = Node.Idx1;
+	*j = Node.Idx2;
+}
 
 //#pragma GCC optimize( "", on )
-#pragma GCC pop_options
-#pragma GCC diagnostic warning "-Wstrict-aliasing"
+//#pragma GCC pop_options
+//#pragma GCC diagnostic warning "-Wstrict-aliasing"
 
 void ComputeMin(double x1, double x2, double f1, double f2, double M, double* t, float* f)
 {
@@ -159,7 +180,7 @@ SEXP Pijavski( SEXP fn, SEXP Lips, SEXP x1, SEXP x2, SEXP iter, SEXP prec, SEXP 
   DATA_TYPE Node;
   std::vector<double> x, f;
 
-  if (*maxiter>=0xFFFD) *maxiter=0xFFFD; // cannot use short indices!
+ // if (*maxiter>=0xFFFD) *maxiter=0xFFFD; // cannot use short indices!
 
   int Iter=0;
   double Best=10e10;
@@ -168,23 +189,25 @@ SEXP Pijavski( SEXP fn, SEXP Lips, SEXP x1, SEXP x2, SEXP iter, SEXP prec, SEXP 
   double t,t1=0, t2=0,t3=0,f1=0,f2=0, f3=0, M=*Lip;
   float ff;
 
-  unsigned short int i,j,k;
+  unsigned int i,j,k;
 
   t1=*Xl;
   //F(&t1,&f1);
   Rcpp::Function func(fn);
-  fval = Rf_eval(func(t1, f1), env); //evaluates the function in R, fval is the output
+  PROTECT(fval = Rf_eval(func(t1, f1), env)); //evaluates the function in R, fval is the output
   //Rprintf("\n%s", "Back to Pijavski-C: ");
   f1 = Rf_asReal(fval);
   if(Best>f1) { Best=f1; *x0=t1;}
   //Rprintf("\nBest:%f, *x0:%f\n", Best,*x0);
   x.push_back(t1);
   f.push_back(f1);
-
+  UNPROTECT(1);
+  
   t2=*Xu;
   //F(&t2,&f2);
-  fval = Rf_eval(func(t2,f2), env);
+  PROTECT(fval = Rf_eval(func(t2,f2), env));
   f2 = Rf_asReal(fval);
+  UNPROTECT(1);
   if(Best>f2) { Best=f2; *x0=t2;}
   x.push_back(t2);
   f.push_back(f2);

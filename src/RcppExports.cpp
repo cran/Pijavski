@@ -24,3 +24,26 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+
+#include <R_ext/Rdynload.h>    
+#include <R_ext/Visibility.h>
+
+static const R_CallMethodDef callMethods[]  = {
+  {NULL, NULL, 0}
+};
+
+static R_NativePrimitiveArgType myC_t[] = {
+    INTSXP, REALSXP, REALSXP, REALSXP, INTSXP, REALSXP, REALSXP
+};
+
+static const R_CMethodDef cMethods[] = {
+   {"Pijavski", (DL_FUNC) &Pijavski, 7, myC_t},
+   {NULL, NULL, 0, NULL}
+};
+
+void
+R_init_Pijavski(DllInfo *info)
+{
+   R_registerRoutines(info, cMethods, callMethods, NULL, NULL);
+   R_useDynamicSymbols(info, TRUE); 
+}
