@@ -196,7 +196,8 @@ SEXP Pijavski( SEXP fn, SEXP Lips, SEXP x1, SEXP x2, SEXP iter, SEXP prec, SEXP 
   Rcpp::Function func(fn);
   PROTECT(fval = Rf_eval(func(t1, f1), env)); //evaluates the function in R, fval is the output
   //Rprintf("\n%s", "Back to Pijavski-C: ");
-  f1 = Rf_asReal(fval);
+  f1=as<double>(fval);
+  //PROTECT(f1 =as<double>(fval)); //= Rf_asReal(fval)
   if(Best>f1) { Best=f1; *x0=t1;}
   //Rprintf("\nBest:%f, *x0:%f\n", Best,*x0);
   x.push_back(t1);
@@ -206,7 +207,8 @@ SEXP Pijavski( SEXP fn, SEXP Lips, SEXP x1, SEXP x2, SEXP iter, SEXP prec, SEXP 
   t2=*Xu;
   //F(&t2,&f2);
   PROTECT(fval = Rf_eval(func(t2,f2), env));
-  f2 = Rf_asReal(fval);
+   f2=as<double>(fval);
+//  PROTECT(f2=as<double>(fval) ); //= Rf_asReal(fval)
   UNPROTECT(1);
   if(Best>f2) { Best=f2; *x0=t2;}
   x.push_back(t2);
@@ -235,7 +237,8 @@ SEXP Pijavski( SEXP fn, SEXP Lips, SEXP x1, SEXP x2, SEXP iter, SEXP prec, SEXP 
 
     //F(&t3,&f3);
     PROTECT(fval = Rf_eval(func(t3,f3), env));
-    f3 = Rf_asReal(fval);
+	f3= as<double>(fval);
+    //f3 = Rf_asReal(fval);
 
     x.push_back(t3);
     f.push_back(f3);
